@@ -13,7 +13,7 @@
 #define delay_readings 5000
 
 String plant = "mimosa pudica";
-String server ="https://open.plantbook.io/api/v1/plant/detail/";
+String server ="https://open.plantbook.io/api/v1/plant/detail/mimosa%20pudica";
 String apiKey = "12fb8eb45d63fd1bba9518ffaac0017a0a15484e";
 
 
@@ -71,7 +71,7 @@ String topic;
 String debug_topic = "smart_plants_debug";
 
 String tmp;
-int wifi_cell=0;
+int wifi_cell=1;
 const int maxTries=50;
 
 WiFiClient espClient;
@@ -244,7 +244,34 @@ void ledOFF() {
   Serial.println("LED OFF");
   digitalWrite(LED, HIGH);
 }
+void followRedirect(HTTPClient& http) {
+  String newLocation = http.header("Location");
+  Serial.println("Redirecting to: " + newLocation);
 
+  // Close previous connection
+  http.end();
+
+  // Follow the redirect
+  WiFiClientSecure client_s;
+  client_s.setInsecure();
+  if (http.begin(client_s, newLocation)) {
+    http.addHeader("Authorization", String("Token " + apiKey));
+    int httpCode = http.GET();
+    Serial.println("HTTP Code: " + String(httpCode));
+
+    if (httpCode == HTTP_CODE_OK) {
+      String payload = http.getString();
+      Serial.println("Received payload:");
+      Serial.println(payload);
+    } else {
+      Serial.printf("GET request failed after redirect, error: %s\n", http.errorToString(httpCode).c_str());
+    }
+
+    http.end();
+  } else {
+    Serial.println("Unable to connect to redirected URL");
+  }
+}
 void makeGetRequest() {
   WiFiClientSecure client_s;
   client_s.setInsecure(); // Use this only if you don't need SSL verification
@@ -253,21 +280,28 @@ void makeGetRequest() {
   HTTPClient http;
 
   if (http.begin(client_s, server)) {
-    http.addHeader("Authorization", String("Token ") + apiKey);
+    http.addHeader("Authorization", String("Token " + apiKey));
+    http.addHeader("Content-Type", "application/json");
+    Serial.println("Added header: Authorization: "+String("Token " + apiKey));
 
     int httpCode = http.GET();
-
     if (httpCode > 0) {
       if (httpCode == HTTP_CODE_OK) {
         String payload = http.getString();
         Serial.println("Received payload:");
         Serial.println(payload);
+
+    http.end();
+      }
+       else if (httpCode == HTTP_CODE_MOVED_PERMANENTLY || httpCode == HTTP_CODE_FOUND) {
+          if(http.header("Location") != NULL) followRedirect(http);
+          else Serial.println(String(httpCode)+" No redirect header");
+      }else{
+        Serial.println("HTTP Code: "+String(httpCode));
       }
     } else {
       Serial.printf("GET request failed, error: %s\n", http.errorToString(httpCode).c_str());
     }
-
-    http.end();
   } else {
     Serial.println("Unable to connect");
   }
@@ -285,7 +319,7 @@ void setup() {
 
   /* DB */
   plant.replace(" ","%20");
-  server += plant;
+  //server += plant;
   Serial.println(server);
 
   makeGetRequest();
