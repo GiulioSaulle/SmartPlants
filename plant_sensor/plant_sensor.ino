@@ -18,9 +18,34 @@ String plant = "mimosa pudica";
 String server_c = "https://open.plantbook.io/api/v1/plant/detail/";
 /* String apiEndpoint = "/api/v1/plant/detail/mimosa%20pudica/";
 String server = "open.plantbook.io";*/
-String apiKey = "12fb8eb45d63fd1bba9518ffaac0017a0a15484e"; 
+String apiKey = "12fb8eb45d63fd1bba9518ffaac0017a0a15484e";
+
+/* Plant API data */
+String pid;
+String display_pid;
+String alias;
+String category;
+int max_light_mmol;
+int min_light_mmol;
+int max_light_lux;
+int min_light_lux;
+int max_temp;
+int min_temp;
+int max_env_humid;
+int min_env_humid;
+int max_soil_moist;
+int min_soil_moist;
+int max_soil_ec;
+int min_soil_ec;
+String image_url;
+/* END Plant API data */
 
 /* Sensors */
+int watering_time = 0;
+unsigned long lastWatering = 0;
+unsigned long watering_for = 0;
+
+
 DHT11 dht11(10);
 Adafruit_TSL2561_Unified tsl = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 12345);
 
@@ -267,23 +292,23 @@ void makeGetRequest() {
         }
 
         // Access and print each element in the JSON response
-        const char *pid = doc["pid"];
-        const char *display_pid = doc["display_pid"];
-        const char *alias = doc["alias"];
-        const char *category = doc["category"];
-        int max_light_mmol = doc["max_light_mmol"];
-        int min_light_mmol = doc["min_light_mmol"];
-        int max_light_lux = doc["max_light_lux"];
-        int min_light_lux = doc["min_light_lux"];
-        int max_temp = doc["max_temp"];
-        int min_temp = doc["min_temp"];
-        int max_env_humid = doc["max_env_humid"];
-        int min_env_humid = doc["min_env_humid"];
-        int max_soil_moist = doc["max_soil_moist"];
-        int min_soil_moist = doc["min_soil_moist"];
-        int max_soil_ec = doc["max_soil_ec"];
-        int min_soil_ec = doc["min_soil_ec"];
-        const char *image_url = doc["image_url"];
+        pid = String(doc["pid"]);
+        display_pid = String(doc["display_pid"]);
+        alias = String(doc["alias"]);
+        category = String(doc["category"]);
+        max_light_mmol = doc["max_light_mmol"];
+        min_light_mmol = doc["min_light_mmol"];
+        max_light_lux = doc["max_light_lux"];
+        min_light_lux = doc["min_light_lux"];
+        max_temp = doc["max_temp"];
+        min_temp = doc["min_temp"];
+        max_env_humid = doc["max_env_humid"];
+        min_env_humid = doc["min_env_humid"];
+        max_soil_moist = doc["max_soil_moist"];
+        min_soil_moist = doc["min_soil_moist"];
+        max_soil_ec = doc["max_soil_ec"];
+        min_soil_ec = doc["min_soil_ec"];
+        image_url = String(doc["image_url"]);
 
         // Print each element
         Serial.println("Parsed JSON:");
@@ -396,14 +421,15 @@ void setup() {
 void loop() {
 
   if (!client.connected()) {
-    reconnect();
+    //Serial.println("Disconnected");
+    //reconnect();
   }
   client.loop();
 
   unsigned long now = millis();
   if (now - lastMsg > delay_readings) {
     lastMsg = now;
-
+    int soil_moisture = analogRead(soil_moisture_pin);
     int temperature = 0;
     int humidity = 0;
     // Attempt to read the temperature and humidity values from the DHT11 sensor.
@@ -422,14 +448,33 @@ void loop() {
         and no reliable data could be generated! */
       Serial.println("TS2561 overload");
     }
+    if (watering_time == 0 && soil_moisture > max_soil_ec) {
+      lastWatering = now;
+      watering_time = 90000;  //90sec
+      Serial.print(String(soil_moisture) + " ");
+      ledON();
+    } else if (watering_time != 0 && (soil_moisture < (max_soil_ec - 100) || now - lastWatering > watering_time)) {
+      Serial.print(String(soil_moisture) + " ");
+      ledOFF();
+      watering_time = 0;
+      watering_for = now - lastWatering;
+      Serial.println("Watered for: " +String(watering_for/1000)+ "seconds");
+    } else if (watering_time != 0 && soil_moisture < max_soil_ec) {
+      Serial.print(String(soil_moisture) + " ");
+      watering_time = 0;
+      watering_for = now - lastWatering;
+      Serial.println("Watered for: " +String(watering_for/1000)+ "seconds");
+      ledOFF();
+    }
+
+    if (soil_moisture < min_soil_ec) {
+      Serial.println("Expose to Sun");
+    }
+
     String light_sensor = String(event.light);
-    snprintf(msg, MSG_BUFFER_SIZE, "soil_moisture: %ld; temperature: %ld; humidity: %ld; light: %.2f", analogRead(soil_moisture_pin), temperature, humidity, event.light);
+    snprintf(msg, MSG_BUFFER_SIZE, "{soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f}", soil_moisture, temperature, humidity, event.light);
     Serial.print("Publish message: ");
     Serial.println(msg);
-    client.publish(topic.c_str(), msg);
-    /* ledON();
-    delay(200);
-    ledOFF(); */
-    // Serial.println(analogRead(soil_moisture_pin)); //print soil mooisture
+    //client.publish(topic.c_str(), msg);
   }
 }
