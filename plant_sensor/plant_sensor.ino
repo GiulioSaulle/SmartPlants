@@ -12,7 +12,11 @@
 
 #define soil_moisture_pin 0
 #define LED LED_BUILTIN
-#define delay_readings 5000
+#define delay_readings 120000
+
+#define delay_moist_read 60000
+#define watering_time_cost 120000
+
 #define DHT_delay 500
 #define uS_TO_S_FACTOR 1000000 /* Conversion factor for micro seconds to seconds */
 #define mS_TO_S_FACTOR 1000    /* Conversion factor for micro seconds to seconds */
@@ -50,6 +54,7 @@ int watering_time = 0;
 unsigned long lastWatering = 0;
 unsigned long watering_for = 0;
 
+unsigned long last_moist_read = 0;
 
 DHT11 dht11(10);
 Adafruit_TSL2561_Unified tsl = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 12345);
@@ -425,30 +430,15 @@ void loop() {
       reconnect();
     }
     client.loop();
-    unsigned long now = millis();  //esp_timer_get_time(); may work better han millis
-    if (now - lastMsg > (delay_readings - DHT_delay)) {
-      lastMsg = now;
-      int soil_moisture = analogRead(soil_moisture_pin);
-      int temperature = 0;
-      int humidity = 0;
-      // Attempt to read the temperature and humidity values from the DHT11 sensor.
-      int result = dht11.readTemperatureHumidity(temperature, humidity);
-      if (result != 0) {
-        // Print error message based on the error code.
-        Serial.println(DHT11::getErrorString(result));
-      }
 
-      // Get a new sensor event
-      sensors_event_t event;
-      tsl.getEvent(&event);
-      // Display the results (light is measured in lux)
-      if (!event.light) {
-        // If event.light = 0 lux the sensor is probably saturated and no reliable data could be generated!
-        Serial.println("TS2561 overload");
-      }
+    unsigned long now = millis();  //esp_timer_get_time(); may work better han millis
+
+    if (now - last_moist_read > delay_moist_read) {
+      last_moist_read = now;
+      int soil_moisture = analogRead(soil_moisture_pin);
       if (watering_time == 0 && soil_moisture > max_soil_ec) {
         lastWatering = now;
-        watering_time = 90000;  //90sec
+        watering_time = watering_time_cost;  //120sec
         Serial.print(String(soil_moisture) + " ");
         ledON();
       } else if (watering_time != 0 && (soil_moisture < (max_soil_ec - 100) || now - lastWatering > watering_time)) {
@@ -461,9 +451,54 @@ void loop() {
       if (soil_moisture < min_soil_ec) {
         Serial.println("Expose to Sun");
       }
+    }
+
+    if (now - lastMsg > (delay_readings - DHT_delay)) {
+      lastMsg = now;
+      int temperature = 0;
+      int humidity = 0;
+      int soil_moisture = analogRead(soil_moisture_pin);
+      // Attempt to read the temperature and humidity values from the DHT11 sensor.
+      int result = dht11.readTemperatureHumidity(temperature, humidity);
+      if (result != 0) {
+        // Print error message based on the error code.
+        Serial.println(DHT11::getErrorString(result));
+      }
+
+      // Get a new sensor event
+      sensors_event_t event;
+      tsl.getEvent(&event);
+
+      // Display the results (light is measured in lux)
+      /* if (!event.light) {
+        // If event.light = 0 lux the sensor is probably saturated and no reliable data could be generated!
+        Serial.println("TS2561 overload");
+      } */
+      
+      /*if (watering_time == 0 && soil_moisture > max_soil_ec) {
+        lastWatering = now;
+        watering_time = 120000;  //120sec
+        Serial.print(String(soil_moisture) + " ");
+        ledON();
+      } else if (watering_time != 0 && (soil_moisture < (max_soil_ec - 100) || now - lastWatering > watering_time)) {
+        Serial.print(String(soil_moisture) + " ");
+        ledOFF();
+        watering_time = 0;
+        watering_for = now - lastWatering;
+        Serial.println("Watered for: " + String(watering_for / 1000) + "seconds");
+      }
+      if (soil_moisture < min_soil_ec) {
+        Serial.println("Expose to Sun");
+      } */
 
       String light_sensor = String(event.light);
-      snprintf(msg, MSG_BUFFER_SIZE, "{soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f}", soil_moisture, temperature, humidity, event.light);
+
+      if (watering_for != 0) {
+        snprintf(msg, MSG_BUFFER_SIZE, "{soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f, watering_time: %ld}", soil_moisture, temperature, humidity, event.light, watering_for);
+        watering_for = 0;
+      } else {
+        snprintf(msg, MSG_BUFFER_SIZE, "{soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f}", soil_moisture, temperature, humidity, event.light);
+      }
       Serial.print("Publish message: ");
       Serial.println(msg);
       client.publish(topic.c_str(), msg);
