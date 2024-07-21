@@ -13,6 +13,11 @@
 #define soil_moisture_pin 0
 #define LED LED_BUILTIN
 #define delay_readings 5000
+#define DHT_delay 500
+#define uS_TO_S_FACTOR 1000000 /* Conversion factor for micro seconds to seconds */
+#define mS_TO_S_FACTOR 1000    /* Conversion factor for micro seconds to seconds */
+#define TIME_TO_SLEEP 20       /* Time ESP32 will go to sleep (in seconds) */
+
 
 String plant = "mimosa pudica";
 String server_c = "https://open.plantbook.io/api/v1/plant/detail/";
@@ -95,8 +100,6 @@ void configureSensor(void) {
 /* END Sensors */
 
 /* Wifi */
-/* const char* ssid = "Vodafone-50632873";
-const char* password = "zemaFKUdaX1."; */
 const char *mqtt_server = "mqtt-dashboard.com";
 
 const char *ssids[] = { "Vodafone-50632873", "Vodafone-A83245675", "Vodafone-A83245675-EXT", "Vodafone-CGiulia" };
@@ -155,6 +158,7 @@ void setup_wifi() {
   Serial.println(ssids[wifi_cell]);
 
   WiFi.mode(WIFI_STA);
+  WiFi.setAutoReconnect(true);
   WiFi.begin(ssids[wifi_cell], passwords[wifi_cell]);
 
   while (WiFi.status() != WL_CONNECTED) {
@@ -168,6 +172,9 @@ void setup_wifi() {
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
+  if (WiFi.getSleep() == true) {
+    WiFi.setSleep(false);
+  }
 }
 
 void callback(char *topic, byte *payload, unsigned int length) {
@@ -190,19 +197,11 @@ void callback(char *topic, byte *payload, unsigned int length) {
     client.publish(debug_topic.c_str(), tmp.c_str());
     esp_restart();
   }
-
-  // Switch on the LED if an 1 was received as first character
-  /* if ((char)payload[0] == '1') {
-    digitalWrite(BUILTIN_LED, LOW);   // Turn the LED on (Note that LOW is the voltage level
-    // but actually the LED is on; this is because
-    // it is active low on the ESP-01)
-  } else {
-    digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
-  } */
 }
 
 void reconnect() {
   // Loop until we're reconnected
+  Serial.println("Reconnection..to MQTT Server");
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Create a random client ID
@@ -397,7 +396,7 @@ void setup() {
   /* END DB */
 
   /* Sensor setup */
-  dht11.setDelay(delay_readings);  // Set this to the desired reading delay. Default is 500ms.
+  //dht11.setDelay(delay_readings);  // Set this to the desired reading delay. Default is 500ms.
   if (!tsl.begin()) {
     /* There was a problem detecting the TSL2561 ... check your connections */
     String err_tsl = "Ooops, no TSL2561 detected ... Check your wiring or I2C ADDR!";
@@ -419,62 +418,75 @@ void setup() {
 }
 
 void loop() {
-
-  if (!client.connected()) {
-    //Serial.println("Disconnected");
-    //reconnect();
-  }
-  client.loop();
-
-  unsigned long now = millis();
-  if (now - lastMsg > delay_readings) {
-    lastMsg = now;
-    int soil_moisture = analogRead(soil_moisture_pin);
-    int temperature = 0;
-    int humidity = 0;
-    // Attempt to read the temperature and humidity values from the DHT11 sensor.
-    int result = dht11.readTemperatureHumidity(temperature, humidity);
-    if (result != 0) {
-      // Print error message based on the error code.
-      Serial.println(DHT11::getErrorString(result));
+  //printWiFiStatus();
+  //Serial.println("MQTT Client is: " + String(client.connected()));
+  if (WiFi.status() == WL_CONNECTED) {  //Connected to WiFi
+    if (!client.connected()) {
+      reconnect();
     }
+    client.loop();
+    unsigned long now = millis();  //esp_timer_get_time(); may work better han millis
+    if (now - lastMsg > (delay_readings - DHT_delay)) {
+      lastMsg = now;
+      int soil_moisture = analogRead(soil_moisture_pin);
+      int temperature = 0;
+      int humidity = 0;
+      // Attempt to read the temperature and humidity values from the DHT11 sensor.
+      int result = dht11.readTemperatureHumidity(temperature, humidity);
+      if (result != 0) {
+        // Print error message based on the error code.
+        Serial.println(DHT11::getErrorString(result));
+      }
 
-    /* Get a new sensor event */
-    sensors_event_t event;
-    tsl.getEvent(&event);
-    /* Display the results (light is measured in lux) */
-    if (!event.light) {
-      /* If event.light = 0 lux the sensor is probably saturated
-        and no reliable data could be generated! */
-      Serial.println("TS2561 overload");
-    }
-    if (watering_time == 0 && soil_moisture > max_soil_ec) {
-      lastWatering = now;
-      watering_time = 90000;  //90sec
-      Serial.print(String(soil_moisture) + " ");
-      ledON();
-    } else if (watering_time != 0 && (soil_moisture < (max_soil_ec - 100) || now - lastWatering > watering_time)) {
-      Serial.print(String(soil_moisture) + " ");
-      ledOFF();
-      watering_time = 0;
-      watering_for = now - lastWatering;
-      Serial.println("Watered for: " +String(watering_for/1000)+ "seconds");
-    } else if (watering_time != 0 && soil_moisture < max_soil_ec) {
-      Serial.print(String(soil_moisture) + " ");
-      watering_time = 0;
-      watering_for = now - lastWatering;
-      Serial.println("Watered for: " +String(watering_for/1000)+ "seconds");
-      ledOFF();
-    }
+      // Get a new sensor event
+      sensors_event_t event;
+      tsl.getEvent(&event);
+      // Display the results (light is measured in lux)
+      if (!event.light) {
+        // If event.light = 0 lux the sensor is probably saturated and no reliable data could be generated!
+        Serial.println("TS2561 overload");
+      }
+      if (watering_time == 0 && soil_moisture > max_soil_ec) {
+        lastWatering = now;
+        watering_time = 90000;  //90sec
+        Serial.print(String(soil_moisture) + " ");
+        ledON();
+      } else if (watering_time != 0 && (soil_moisture < (max_soil_ec - 100) || now - lastWatering > watering_time)) {
+        Serial.print(String(soil_moisture) + " ");
+        ledOFF();
+        watering_time = 0;
+        watering_for = now - lastWatering;
+        Serial.println("Watered for: " + String(watering_for / 1000) + "seconds");
+      }
+      if (soil_moisture < min_soil_ec) {
+        Serial.println("Expose to Sun");
+      }
 
-    if (soil_moisture < min_soil_ec) {
-      Serial.println("Expose to Sun");
+      String light_sensor = String(event.light);
+      snprintf(msg, MSG_BUFFER_SIZE, "{soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f}", soil_moisture, temperature, humidity, event.light);
+      Serial.print("Publish message: ");
+      Serial.println(msg);
+      client.publish(topic.c_str(), msg);
     }
+  } else {
+    //WiFi.disconnect();
+    //setup_wifi();
 
-    String light_sensor = String(event.light);
-    snprintf(msg, MSG_BUFFER_SIZE, "{soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f}", soil_moisture, temperature, humidity, event.light);
-    Serial.print("Publish message: ");
-    Serial.println(msg);
-    //client.publish(topic.c_str(), msg);
+    Serial.println("A: No. Trying to reconnect now . . . ");
+    WiFi.reconnect();
+    int tries = 0;
+    while (WiFi.status() != WL_CONNECTED) {
+      delay(500);
+      Serial.print(".");
+      tries++;
+      if (tries >= 50) {
+
+        Serial.println("Impossible reconnecting to WiFi, rebooting device!");
+        ESP.restart();
+      }
+    }
+    Serial.println("");
+    Serial.print("Reconnected to wifi with Local IP:");
+    Serial.println(WiFi.localIP());
   }
 }
