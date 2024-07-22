@@ -111,8 +111,9 @@ const char *ssids[] = { "Vodafone-50632873", "Vodafone-A83245675", "Vodafone-A83
 const char *passwords[] = { "zemaFKUdaX1.", "3qxhfYKxpEYgdtad", "3qxhfYKxpEYgdtad", "Aeria999" };
 
 int randNumber;
-String topic;
-String debug_topic = "smart_plants_debug";
+String topic; //topic used to send sensors data
+String debug_topic = "smart_plants_debug"; // topic used for debug messages. Ex: sensors not working properly.
+String status_topic; //topic used to send which parameters are not well for the plant
 
 String tmp;
 int wifi_cell = 3;
@@ -501,13 +502,29 @@ void loop() {
         Serial.println("Expose to Sun");
       } */
 
-      String light_sensor = String(event.light);
+      
+      /*
+        0: Too Low
+        1: Ok
+        2: Too High
+      */
+      unsigned int status_light = 1; 
+      unsigned int status_temp = 1;
+      unsigned int status_hum = 1;
+      if(max_light_lux - event.light < 0) status_light = 2;
+      else if(min_light_lux - event.light > 0 ) status_light = 0;
+
+      if(max_temp - temperature < 0) status_temp = 2;
+      else if(min_temp - temperature > 0 ) status_temp = 0;
+
+      if(max_env_humid - humidity < 0) status_hum = 2;
+      else if(min_env_humid - humidity > 0 ) status_hum = 0;
 
       if (watering_for != 0) {
-        snprintf(msg, MSG_BUFFER_SIZE, "{plant: "+pid+", sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f, watering_time: %ld}}", soil_moisture, temperature, humidity, event.light, watering_for);
+        snprintf(msg, MSG_BUFFER_SIZE, "{plant: %s, sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f, watering_time: %ld}, status: {temperature: %ld, humidity: %ld, light: %.2f}}",pid, soil_moisture, temperature, humidity, event.light, watering_for, status_temp, status_hum, status_light);
         watering_for = 0;
       } else {
-        snprintf(msg, MSG_BUFFER_SIZE, "{plant: "+pid+", sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f}}", soil_moisture, temperature, humidity, event.light);
+        snprintf(msg, MSG_BUFFER_SIZE, "{plant: %s, sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f},status: {temperature: %ld, humidity: %ld, light: %.2f}}",pid, soil_moisture, temperature, humidity, event.light, status_temp, status_hum, status_light);
       }
       Serial.print("Publish message: ");
       Serial.println(msg);
