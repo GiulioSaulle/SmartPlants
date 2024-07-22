@@ -210,7 +210,7 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Create a random client ID
-    String clientId = "ESP32C3-Client-";
+    String clientId = "Plant-";
     clientId += String(randNumber, HEX);
     // Attempt to connect
     client.setKeepAlive(90);  // setting keep alive to 90 seconds
@@ -237,6 +237,16 @@ void ledOFF() {
   Serial.println("LED OFF");
   digitalWrite(LED, HIGH);
 }
+
+void openPump(){
+  Serial.print("Opened Pump");
+}
+
+void closePump(){
+  Serial.println("Closed Pump");
+
+}
+
 void followRedirect(HTTPClient &http) {
   String newLocation = http.header("Location");
   Serial.println("Redirecting to: " + newLocation);
@@ -494,10 +504,10 @@ void loop() {
       String light_sensor = String(event.light);
 
       if (watering_for != 0) {
-        snprintf(msg, MSG_BUFFER_SIZE, "{soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f, watering_time: %ld}", soil_moisture, temperature, humidity, event.light, watering_for);
+        snprintf(msg, MSG_BUFFER_SIZE, "{plant: "+pid+", sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f, watering_time: %ld}}", soil_moisture, temperature, humidity, event.light, watering_for);
         watering_for = 0;
       } else {
-        snprintf(msg, MSG_BUFFER_SIZE, "{soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f}", soil_moisture, temperature, humidity, event.light);
+        snprintf(msg, MSG_BUFFER_SIZE, "{plant: "+pid+", sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f}}", soil_moisture, temperature, humidity, event.light);
       }
       Serial.print("Publish message: ");
       Serial.println(msg);
