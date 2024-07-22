@@ -31,15 +31,15 @@ DHT11 dht11(26);
 const char* password = "zemaFKUdaX1."; */
 const char* mqtt_server = "mqtt-dashboard.com";
 
-const char* ssids[] = { "Vodafone-50632873", "Vodafone-A83245675", "Vodafone-A83245675-EXT" };
-const char* passwords[] = { "zemaFKUdaX1.", "3qxhfYKxpEYgdtad", "3qxhfYKxpEYgdtad" };
+const char *ssids[] = { "Vodafone-50632873", "Vodafone-A83245675", "Vodafone-A83245675-EXT", "Vodafone-CGiulia" };
+const char *passwords[] = { "zemaFKUdaX1.", "3qxhfYKxpEYgdtad", "3qxhfYKxpEYgdtad", "Aeria999" };
 
 int randNumber;
 String topic;
 String debug_topic = "smart_plants_debug";
 
 String tmp;
-int wifi_cell = 0;
+int wifi_cell = 3;
 const int maxTries = 50;
 
 WiFiClient espClient;
@@ -102,6 +102,12 @@ void setup_wifi() {
   Serial.println(WiFi.localIP());
 }
 
+void handlePlant(unsigned int status[], int dim){
+  // multiply each array element by 2
+   for ( int k = 0 ; k < dim ; ++k )
+   Serial.println(status[ k ]);
+}
+
 void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print("Message arrived [");
   Serial.print(topic);
@@ -113,6 +119,21 @@ void callback(char* topic, byte* payload, unsigned int length) {
     message += (char)payload[i];
   }
   Serial.println(message);
+
+  
+  // Parse the JSON response
+  DynamicJsonDocument doc(1024);
+  DeserializationError error = deserializeJson(doc, message);
+
+  if (error) {
+    Serial.print("deserializeJson() failed: ");
+    Serial.println(error.c_str());
+    return;
+  }
+
+  unsigned int status[3] = {doc["status"]["temperature"],doc["status"]["humidity"],doc["status"]["light"]};
+
+  handlePlant(status,3);
 
   // Check if the message is "1-shut_down"
   if (message == String(randNumber) + "-restart") {
@@ -165,7 +186,7 @@ void setup() {
   pinMode(LED, OUTPUT);         // Initialize the BUILTIN_LED pin as an output
   digitalWrite(LED, HIGH);      //turn off led
   randNumber = random(0xffff);  // random(256); //0 to 255
-  topic = "smart_plants/" + String(randNumber);
+  topic = "smart_plants/#";// + String(randNumber);
   setup_wifi();
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
@@ -201,10 +222,10 @@ void loop() {
       }
 
 
-      snprintf(msg, MSG_BUFFER_SIZE, "temperature: %ld; humidity: %ld", temperature, humidity);
+      /* snprintf(msg, MSG_BUFFER_SIZE, "temperature: %ld; humidity: %ld", temperature, humidity);
       Serial.print("Publish message: ");
       Serial.println(msg);
-      client.publish(topic.c_str(), msg);
+      client.publish(topic.c_str(), msg); */
       /* ledON();
     delay(200);
     ledOFF(); */

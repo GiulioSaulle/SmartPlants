@@ -521,7 +521,7 @@ void loop() {
       else if(min_env_humid - humidity > 0 ) status_hum = 0;
 
       if (watering_for != 0) {
-        snprintf(msg, MSG_BUFFER_SIZE, "{plant: %s, sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f, watering_time: %ld}, status: {temperature: %ld, humidity: %ld, light: %.2f}}",pid, soil_moisture, temperature, humidity, event.light, watering_for, status_temp, status_hum, status_light);
+        snprintf(msg, MSG_BUFFER_SIZE, "{plant: %s, sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f}, watering_time: %ld, status: {temperature: %ld, humidity: %ld, light: %.2f}}",pid, soil_moisture, temperature, humidity, event.light, watering_for, status_temp, status_hum, status_light);
         watering_for = 0;
       } else {
         snprintf(msg, MSG_BUFFER_SIZE, "{plant: %s, sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f},status: {temperature: %ld, humidity: %ld, light: %.2f}}",pid, soil_moisture, temperature, humidity, event.light, status_temp, status_hum, status_light);
