@@ -18,18 +18,23 @@
 #define mS_TO_S_FACTOR 1000    /* Conversion factor for micro seconds to seconds */
 #define TIME_TO_SLEEP 20       /* Time ESP32 will go to sleep (in seconds) */
 
+const int sensor_number = 3;
+
 
 String server_c = "https://open.plantbook.io/api/v1/plant/detail/";
 String apiKey = "12fb8eb45d63fd1bba9518ffaac0017a0a15484e";
 
 /* Sensors */
 DHT11 dht11(26);
+String status_plant[sensor_number];
+String param[sensor_number] = { "Temperature", "Humidity", "Sunlight" };
+String status_description[sensor_number] = { " is too low.", " is normal.", " is too high." };
 /* END Sensors */
 
 /* Wifi */
 /* const char* ssid = "Vodafone-50632873";
 const char* password = "zemaFKUdaX1."; */
-const char* mqtt_server = "mqtt-dashboard.com";
+const char *mqtt_server = "mqtt-dashboard.com";
 
 const char *ssids[] = { "Vodafone-50632873", "Vodafone-A83245675", "Vodafone-A83245675-EXT", "Vodafone-CGiulia" };
 const char *passwords[] = { "zemaFKUdaX1.", "3qxhfYKxpEYgdtad", "3qxhfYKxpEYgdtad", "Aeria999" };
@@ -37,6 +42,7 @@ const char *passwords[] = { "zemaFKUdaX1.", "3qxhfYKxpEYgdtad", "3qxhfYKxpEYgdta
 int randNumber;
 String topic;
 String debug_topic = "smart_plants_debug";
+String smart_mirror_topic = "smart_mirror";
 
 String tmp;
 int wifi_cell = 3;
@@ -48,6 +54,82 @@ unsigned long lastMsg = 0;
 #define MSG_BUFFER_SIZE (128)
 char msg[MSG_BUFFER_SIZE];
 /* END Wifi */
+
+/* Useful Vars*/
+DynamicJsonDocument doc(1024);
+const char* messages_formal[sensor_number][sensor_number][sensor_number] = {
+    { // status[0] == 0 (temperature too low)
+        { "The temperature is too low and the environment is dry. Please consider relocating me to a warmer location with increased sunlight.",
+          "The temperature is too low and the surroundings are dry. It would be beneficial to move me to a warmer area with more sunlight.",
+          "The temperature is too low and the environment is dry. Additionally, it is overly bright. A relocation to a warmer and less bright location is recommended." },
+        { "The temperature is low, and the environment is dry. Please move me to a location with higher temperatures and increased sunlight.",
+          "The temperature is low, and while it is bright, the conditions are not ideal. A warmer location with more light would be preferable.",
+          "The temperature is low, and the environment is both dry and excessively bright. Consider relocating me to a more suitable environment." },
+        { "The temperature is low and the humidity is excessive. Please find a warmer location with more balanced conditions.",
+          "The temperature is low and the environment is humid, though bright. A more comfortable and warmer location would be beneficial.",
+          "The temperature is low, the environment is humid, and it is excessively bright. A move to a warmer and more balanced environment is recommended." }
+    },
+    { // status[0] == 1 (temperature normal)
+        { "The temperature is ideal; however, the environment is too dry. Please consider using a humidifier.",
+          "The temperature is ideal, but the conditions are too dry and insufficiently illuminated. Increasing both humidity and light would be advantageous.",
+          "The temperature is ideal, but the environment is too dry and excessively bright. Consider using a humidifier to address the dryness." },
+        { "The temperature and humidity levels are optimal. However, additional sunlight would be beneficial.",
+          "All conditions are satisfactory. I am currently thriving in this environment.",
+          "The temperature is ideal, but the brightness is excessive. Adjusting the lighting might enhance my comfort." },
+        { "The temperature is ideal, but the humidity level is too high. Improving ventilation would be beneficial.",
+          "The temperature is appropriate, but the environment is both humid and excessively bright. Enhancing ventilation and adjusting the lighting would be advantageous.",
+          "The temperature is ideal, but the high humidity and excessive brightness suggest that improving ventilation and adjusting the lighting could enhance conditions." }
+    },
+    { // status[0] == 2 (temperature too high)
+        { "The temperature is too high and the environment is dry. Relocating me to a cooler and more humid location would be ideal.",
+          "The temperature is excessively high and the environment is dry. Additionally, it is bright. A move to a cooler location is recommended.",
+          "The temperature is too high and the environment is overly bright. A cooler location would be preferable." },
+        { "The temperature is too high; however, the humidity level is acceptable. Please find a cooler environment.",
+          "The temperature is high and the surroundings are bright, though the humidity is adequate. A cooler environment would improve conditions.",
+          "The temperature is too high and the brightness is excessive. A relocation to a cooler environment would be beneficial." },
+        { "The temperature is too high and the humidity is also excessive. A move to a cooler and less humid environment is recommended.",
+          "The temperature is high and the environment is humid, though bright. Relocating to a cooler environment would improve conditions.",
+          "The temperature is too high, and the environment is excessively bright and humid. A transition to a cooler and more comfortable environment is advised." }
+    }
+};
+
+const char* messages_friendly[sensor_number][sensor_number][sensor_number] = {
+    { // status[0] == 0 (temperature too low)
+        { "Brrr... it's too cold and dry here. Can you move me to a warmer spot with more sun?", 
+          "Brrr... it's too cold and dry here. Can you move me somewhere warmer with more sun?", 
+          "Brrr... it's too cold and dry here. Can you move me to a warmer spot? Also, it's too bright!" },
+        { "Brrr... it's too cold here. Can you move me to a warmer place with more sun?", 
+          "Brrr... it's cold here, but it's bright. Can we find a warmer place?", 
+          "Brrr... it's cold, dry, and too bright here. Can you move me to a more comfortable place?" },
+        { "Brrr... it's cold and too humid here. Can we find a warmer spot with better conditions?", 
+          "Brrr... it's cold and humid, but it's bright. Can we move to a cozier spot?", 
+          "Brrr... it's cold, humid, and very bright here. Can you move me to a warmer and more comfortable place?" }
+    },
+    { // status[0] == 1 (temperature normal)
+        { "The temperature is nice, but it's too dry. Could you use a humidifier?", 
+          "The temperature is nice, but it's too dry and dark. Could you add some light and humidity?", 
+          "The temperature is nice, but it's too dry and very bright here. Could you use a humidifier?" },
+        { "The temperature is perfect, and also humidity. Could you give me more sun?", 
+          "Yay! Everything feels just right! I'm feeling good.", 
+          "The temperature is perfect, but it's too bright here. Maybe adjust the lighting?" },
+        { "The temperature is nice, but it's too humid. Could you improve the ventilation?", 
+          "The temperature is nice, but it's humid and bright. Could you improve the ventilation?", 
+          "The temperature is nice, but it's too humid and very bright. Could you improve the ventilation and adjust the lighting?" }
+    },
+    { // status[0] == 2 (temperature too high)
+        { "Phew... it's too hot and dry here. Can you move me to a cooler and more humid place?", 
+          "Phew... it's too hot and dry here. Also, it's bright. Can you find a cooler spot?", 
+          "Phew... it's too hot and bright here. Can you find a cooler place?" },
+        { "Phew... it's too hot here, but the humidity is fine. Can you find a cooler spot?", 
+          "Phew... it's too hot and bright here, but the humidity is okay. Can you find a cooler place?", 
+          "Phew... it's too hot and very bright here. Can you move me to a cooler place?" },
+        { "Phew... it's too hot and humid here. Can you find a cooler and less humid spot?", 
+          "Phew... it's too hot and humid here, but it's bright. Can we move to a cooler spot?", 
+          "Phew... it's too hot, humid, and very bright here. Can you find a cooler and more comfortable environment?" }
+    }
+};
+
+/* END Useful Vars*/
 
 void printWiFiStatus() {
   switch (WiFi.status()) {
@@ -102,13 +184,7 @@ void setup_wifi() {
   Serial.println(WiFi.localIP());
 }
 
-void handlePlant(unsigned int status[], int dim){
-  // multiply each array element by 2
-   for ( int k = 0 ; k < dim ; ++k )
-   Serial.println(status[ k ]);
-}
-
-void callback(char* topic, byte* payload, unsigned int length) {
+void callback(char *topic, byte *payload, unsigned int length) {
   Serial.print("Message arrived [");
   Serial.print(topic);
   Serial.print("] ");
@@ -120,28 +196,48 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
   Serial.println(message);
 
-  
-  // Parse the JSON response
-  DynamicJsonDocument doc(1024);
-  DeserializationError error = deserializeJson(doc, message);
-
-  if (error) {
-    Serial.print("deserializeJson() failed: ");
-    Serial.println(error.c_str());
-    return;
-  }
-
-  unsigned int status[3] = {doc["status"]["temperature"],doc["status"]["humidity"],doc["status"]["light"]};
-
-  handlePlant(status,3);
 
   // Check if the message is "1-shut_down"
-  if (message == String(randNumber) + "-restart") {
+  if (message == "Brain-restart") {
     // Reset the ESP32-C3
     tmp = "Resetting now...";
     Serial.println(tmp);
     client.publish(debug_topic.c_str(), tmp.c_str());
     esp_restart();
+  } else {
+    // Parse the JSON response
+    DeserializationError error = deserializeJson(doc, message);
+
+    if (error) {
+      Serial.print("deserializeJson() failed: ");
+      Serial.println(error.c_str());
+      return;
+    }
+
+    unsigned int status[sensor_number] = { doc["status"]["temperature"], doc["status"]["humidity"], doc["status"]["light"] };
+    String plant = doc["plant"];
+
+
+    /* Handle Plant */
+
+    /*String tmp = "{plant: '" + plant + "', status: { ";
+    for (int k = 0; k < sensor_number; k++) {
+      if( k!=0) tmp+= ", ";
+      status_plant[k] = String(param[k] + status_description[status[k]]);
+      //Serial.println(status_plant[k]);
+      tmp += "'"+status_plant[k] + "'";
+    } 
+    tmp += "}}";*/
+
+    String tmp = "From " + plant + ": ";
+    
+    const char* message = messages_friendly[status[0]][status[1]][status[2]];
+    tmp += message;
+    /* END Handle Plant */
+
+    client.publish(smart_mirror_topic.c_str(), tmp.c_str());
+    Serial.print("Publish message: ");
+    Serial.println(tmp);
   }
 }
 
@@ -186,7 +282,7 @@ void setup() {
   pinMode(LED, OUTPUT);         // Initialize the BUILTIN_LED pin as an output
   digitalWrite(LED, HIGH);      //turn off led
   randNumber = random(0xffff);  // random(256); //0 to 255
-  topic = "smart_plants/#";// + String(randNumber);
+  topic = "smart_plants/#";     // + String(randNumber);
   setup_wifi();
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
@@ -222,13 +318,10 @@ void loop() {
       }
 
 
-      /* snprintf(msg, MSG_BUFFER_SIZE, "temperature: %ld; humidity: %ld", temperature, humidity);
+      snprintf(msg, MSG_BUFFER_SIZE, "{room: 1,sensors: {temperature: %ld, humidity: %ld}}", temperature, humidity);
       Serial.print("Publish message: ");
       Serial.println(msg);
-      client.publish(topic.c_str(), msg); */
-      /* ledON();
-    delay(200);
-    ledOFF(); */
+      client.publish(topic.c_str(), msg);
     }
   } else {
     Serial.println("A: No. Trying to reconnect now . . . ");
