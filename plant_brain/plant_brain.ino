@@ -169,6 +169,7 @@ void setup_wifi() {
   Serial.println(ssids[wifi_cell]);
 
   WiFi.mode(WIFI_STA);
+  WiFi.setAutoReconnect(true);
   WiFi.begin(ssids[wifi_cell], passwords[wifi_cell]);
 
   while (WiFi.status() != WL_CONNECTED) {
@@ -182,6 +183,9 @@ void setup_wifi() {
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
+  if (WiFi.getSleep() == true) {
+    WiFi.setSleep(false);
+  }
 }
 
 void callback(char *topic, byte *payload, unsigned int length) {
@@ -321,7 +325,7 @@ void loop() {
       snprintf(msg, MSG_BUFFER_SIZE, "{room: 1,sensors: {temperature: %ld, humidity: %ld}}", temperature, humidity);
       Serial.print("Publish message: ");
       Serial.println(msg);
-      client.publish(topic.c_str(), msg);
+      client.publish(smart_mirror_topic.c_str(), msg);
     }
   } else {
     Serial.println("A: No. Trying to reconnect now . . . ");
