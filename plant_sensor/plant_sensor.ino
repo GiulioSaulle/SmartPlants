@@ -460,7 +460,7 @@ void loop() {
         Serial.println("Watered for: " + String(watering_for / 1000) + "seconds");
       }
       if (soil_moisture < min_soil_ec) {
-        watering_for = -1; //CHeck if it's working
+        watering_for = -1;
         Serial.println("Expose to Sun");
       }
     }

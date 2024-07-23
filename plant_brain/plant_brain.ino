@@ -95,37 +95,37 @@ const char* messages_formal[sensor_number][sensor_number][sensor_number] = {
 
 const char* messages_friendly[sensor_number][sensor_number][sensor_number] = {
     { // status[0] == 0 (temperature too low)
-        { "Brrr... it's too cold and dry here. Can you move me to a warmer spot with more sun?", 
-          "Brrr... it's too cold and dry here. Can you move me somewhere warmer with more sun?", 
-          "Brrr... it's too cold and dry here. Can you move me to a warmer spot? Also, it's too bright!" },
-        { "Brrr... it's too cold here. Can you move me to a warmer place with more sun?", 
-          "Brrr... it's cold here, but it's bright. Can we find a warmer place?", 
-          "Brrr... it's cold, dry, and too bright here. Can you move me to a more comfortable place?" },
-        { "Brrr... it's cold and too humid here. Can we find a warmer spot with better conditions?", 
-          "Brrr... it's cold and humid, but it's bright. Can we move to a cozier spot?", 
-          "Brrr... it's cold, humid, and very bright here. Can you move me to a warmer and more comfortable place?" }
+        { "Brrr... it\'s too cold and dry here. Can you move me to a warmer spot with more sun?", 
+          "Brrr... it\'s too cold and dry here. Can you move me somewhere warmer with more sun?", 
+          "Brrr... it\'s too cold and dry here. Can you move me to a warmer spot? Also, it\'s too bright!" },
+        { "Brrr... it\'s too cold here. Can you move me to a warmer place with more sun?", 
+          "Brrr... it\'s cold here, but it\'s bright. Can we find a warmer place?", 
+          "Brrr... it\'s cold, dry, and too bright here. Can you move me to a more comfortable place?" },
+        { "Brrr... it\'s cold and too humid here. Can we find a warmer spot with better conditions?", 
+          "Brrr... it\'s cold and humid, but it\'s bright. Can we move to a cozier spot?", 
+          "Brrr... it\'s cold, humid, and very bright here. Can you move me to a warmer and more comfortable place?" }
     },
     { // status[0] == 1 (temperature normal)
-        { "The temperature is nice, but it's too dry. Could you use a humidifier?", 
-          "The temperature is nice, but it's too dry and dark. Could you add some light and humidity?", 
-          "The temperature is nice, but it's too dry and very bright here. Could you use a humidifier?" },
+        { "The temperature is nice, but it\'s too dry. Could you use a humidifier?", 
+          "The temperature is nice, but it\'s too dry and dark. Could you add some light and humidity?", 
+          "The temperature is nice, but it\'s too dry and very bright here. Could you use a humidifier?" },
         { "The temperature is perfect, and also humidity. Could you give me more sun?", 
-          "Yay! Everything feels just right! I'm feeling good.", 
-          "The temperature is perfect, but it's too bright here. Maybe adjust the lighting?" },
-        { "The temperature is nice, but it's too humid. Could you improve the ventilation?", 
-          "The temperature is nice, but it's humid and bright. Could you improve the ventilation?", 
-          "The temperature is nice, but it's too humid and very bright. Could you improve the ventilation and adjust the lighting?" }
+          "Yay! Everything feels just right! I\'m feeling good.", 
+          "The temperature is perfect, but it\'s too bright here. Maybe adjust the lighting?" },
+        { "The temperature is nice, but it\'s too humid. Could you improve the ventilation?", 
+          "The temperature is nice, but it\'s humid and bright. Could you improve the ventilation?", 
+          "The temperature is nice, but it\'s too humid and very bright. Could you improve the ventilation and adjust the lighting?" }
     },
     { // status[0] == 2 (temperature too high)
-        { "Phew... it's too hot and dry here. Can you move me to a cooler and more humid place?", 
-          "Phew... it's too hot and dry here. Also, it's bright. Can you find a cooler spot?", 
-          "Phew... it's too hot and bright here. Can you find a cooler place?" },
-        { "Phew... it's too hot here, but the humidity is fine. Can you find a cooler spot?", 
-          "Phew... it's too hot and bright here, but the humidity is okay. Can you find a cooler place?", 
-          "Phew... it's too hot and very bright here. Can you move me to a cooler place?" },
-        { "Phew... it's too hot and humid here. Can you find a cooler and less humid spot?", 
-          "Phew... it's too hot and humid here, but it's bright. Can we move to a cooler spot?", 
-          "Phew... it's too hot, humid, and very bright here. Can you find a cooler and more comfortable environment?" }
+        { "Phew... it\'s too hot and dry here. Can you move me to a cooler and more humid place?", 
+          "Phew... it\'s too hot and dry here. Also, it\'s bright. Can you find a cooler spot?", 
+          "Phew... it\'s too hot and bright here. Can you find a cooler place?" },
+        { "Phew... it\'s too hot here, but the humidity is fine. Can you find a cooler spot?", 
+          "Phew... it\'s too hot and bright here, but the humidity is okay. Can you find a cooler place?", 
+          "Phew... it\'s too hot and very bright here. Can you move me to a cooler place?" },
+        { "Phew... it\'s too hot and humid here. Can you find a cooler and less humid spot?", 
+          "Phew... it\'s too hot and humid here, but it\'s bright. Can we move to a cooler spot?", 
+          "Phew... it\'s too hot, humid, and very bright here. Can you find a cooler and more comfortable environment?" }
     }
 };
 
@@ -219,8 +219,8 @@ void callback(char *topic, byte *payload, unsigned int length) {
     }
 
     unsigned int status[sensor_number] = { doc["status"]["temperature"], doc["status"]["humidity"], doc["status"]["light"] };
-    String plant = doc["plant"];
-
+    String plant = String(doc["plant"]);
+    int watering_for = doc["watering_for"];
 
     /* Handle Plant */
 
@@ -233,10 +233,18 @@ void callback(char *topic, byte *payload, unsigned int length) {
     } 
     tmp += "}}";*/
 
-    String tmp = "From " + plant + ": ";
+    String mess = "From " + plant + ": ";
     
-    const char* message = messages_friendly[status[0]][status[1]][status[2]];
-    tmp += message;
+    const char* message_m = messages_friendly[status[0]][status[1]][status[2]];
+    mess += message_m;
+
+    
+    if(watering_for == -1 && status[1] == 2 && status[2] == 0) {
+      mess += " My moisture is too wet!";
+    }
+    
+    tmp = "{plant: '"+plant+"', watering_for: "+watering_for+", message: '"+mess+"'}";
+
     /* END Handle Plant */
 
     client.publish(smart_mirror_topic.c_str(), tmp.c_str());
