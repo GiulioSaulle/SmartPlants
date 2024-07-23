@@ -12,7 +12,7 @@
 
 #define soil_moisture_pin 0
 #define LED LED_BUILTIN
-#define delay_readings 120000
+#define delay_readings 20000
 
 #define delay_moist_read 60000
 #define watering_time_cost 120000
@@ -122,7 +122,7 @@ const int maxTries = 50;
 WiFiClient espClient;
 PubSubClient client(espClient);
 unsigned long lastMsg = 0;
-#define MSG_BUFFER_SIZE (128)
+#define MSG_BUFFER_SIZE (256)
 char msg[MSG_BUFFER_SIZE];
 /* END Wifi */
 
@@ -451,15 +451,16 @@ void loop() {
         lastWatering = now;
         watering_time = watering_time_cost;  //120sec
         Serial.print(String(soil_moisture) + " ");
-        ledON();
+        openPump();
       } else if (watering_time != 0 && (soil_moisture < (max_soil_ec - 100) || now - lastWatering > watering_time)) {
         Serial.print(String(soil_moisture) + " ");
-        ledOFF();
+        closePump();
         watering_time = 0;
         watering_for = now - lastWatering;
         Serial.println("Watered for: " + String(watering_for / 1000) + "seconds");
       }
       if (soil_moisture < min_soil_ec) {
+        watering_for = -1; //CHeck if it's working
         Serial.println("Expose to Sun");
       }
     }
@@ -521,10 +522,10 @@ void loop() {
       else if(min_env_humid - humidity > 0 ) status_hum = 0;
 
       if (watering_for != 0) {
-        snprintf(msg, MSG_BUFFER_SIZE, "{room: 0, plant: '%s', sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f}, watering_time: %ld, status: {temperature: %ld, humidity: %ld, light: %.2f}}",display_pid, soil_moisture, temperature, humidity, event.light, watering_for, status_temp, status_hum, status_light);
+        snprintf(msg, MSG_BUFFER_SIZE, "{room: 0, plant: '%s', sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f}, watering_time: %ld, status: {temperature: %ld, humidity: %ld, light: %ld}}",display_pid, soil_moisture, temperature, humidity, event.light, watering_for, status_temp, status_hum, status_light);
         watering_for = 0;
       } else {
-        snprintf(msg, MSG_BUFFER_SIZE, "{room: 0, plant: '%s', sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f},status: {temperature: %ld, humidity: %ld, light: %.2f}}",display_pid, soil_moisture, temperature, humidity, event.light, status_temp, status_hum, status_light);
+        snprintf(msg, MSG_BUFFER_SIZE, "{room: 0, plant: '%s', sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f},status: {temperature: %ld, humidity: %ld, light: %ld}}",display_pid, soil_moisture, temperature, humidity, event.light, status_temp, status_hum, status_light);
       }
       Serial.print("Publish message: ");
       Serial.println(msg);

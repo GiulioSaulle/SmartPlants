@@ -11,7 +11,7 @@
 #include <ArduinoJson.h>
 
 #define LED 2
-#define delay_readings 5000
+#define delay_readings 60000
 
 #define DHT_delay 500
 #define uS_TO_S_FACTOR 1000000 /* Conversion factor for micro seconds to seconds */
