@@ -240,7 +240,7 @@ void ledOFF() {
 }
 
 void openPump(){
-  Serial.print("Opened Pump");
+  Serial.println("Opened Pump");
 }
 
 void closePump(){
@@ -525,7 +525,7 @@ void loop() {
         snprintf(msg, MSG_BUFFER_SIZE, "{room: 0, plant: '%s', sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f}, watering_time: %ld, status: {temperature: %ld, humidity: %ld, light: %ld}}",display_pid, soil_moisture, temperature, humidity, event.light, watering_for, status_temp, status_hum, status_light);
         watering_for = 0;
       } else {
-        snprintf(msg, MSG_BUFFER_SIZE, "{room: 0, plant: '%s', sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f},status: {temperature: %ld, humidity: %ld, light: %ld}}",display_pid, soil_moisture, temperature, humidity, event.light, status_temp, status_hum, status_light);
+        snprintf(msg, MSG_BUFFER_SIZE, "{room: 0, plant: '%s', sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f}, status: {temperature: %ld, humidity: %ld, light: %ld}}",display_pid, soil_moisture, temperature, humidity, event.light, status_temp, status_hum, status_light);
       }
       Serial.print("Publish message: ");
       Serial.println(msg);
