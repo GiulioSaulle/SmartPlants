@@ -12,10 +12,10 @@
 
 #define soil_moisture_pin 0
 #define LED LED_BUILTIN
-#define delay_readings 20000
+#define delay_readings 20000 //reading window sensor
 
-#define delay_moist_read 60000
-#define watering_time_cost 120000
+#define delay_moist_read 60000 //reading window moisture
+#define watering_time_cost 120000 //max watering time
 
 #define DHT_delay 500
 #define uS_TO_S_FACTOR 1000000 /* Conversion factor for micro seconds to seconds */
@@ -522,10 +522,10 @@ void loop() {
       else if(min_env_humid - humidity > 0 ) status_hum = 0;
 
       if (watering_for != 0) {
-        snprintf(msg, MSG_BUFFER_SIZE, "{room: 0, plant: '%s', sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f}, watering_time: %ld, status: {temperature: %ld, humidity: %ld, light: %ld}}",display_pid, soil_moisture, temperature, humidity, event.light, watering_for, status_temp, status_hum, status_light);
+        snprintf(msg, MSG_BUFFER_SIZE, "{room: 0, plant: '%s', plant_img: '%s', sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f}, watering_time: %ld, status: {temperature: %ld, humidity: %ld, light: %ld}}",display_pid, image_url ,soil_moisture, temperature, humidity, event.light, watering_for, status_temp, status_hum, status_light);
         watering_for = 0;
       } else {
-        snprintf(msg, MSG_BUFFER_SIZE, "{room: 0, plant: '%s', sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f}, status: {temperature: %ld, humidity: %ld, light: %ld}}",display_pid, soil_moisture, temperature, humidity, event.light, status_temp, status_hum, status_light);
+        snprintf(msg, MSG_BUFFER_SIZE, "{room: 0, plant: '%s', plant_img: '%s', sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f}, status: {temperature: %ld, humidity: %ld, light: %ld}}",display_pid, image_url, soil_moisture, temperature, humidity, event.light, status_temp, status_hum, status_light);
       }
       Serial.print("Publish message: ");
       Serial.println(msg);
