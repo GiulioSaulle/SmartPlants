@@ -220,6 +220,7 @@ void callback(char *topic, byte *payload, unsigned int length) {
 
     unsigned int status[sensor_number] = { doc["status"]["temperature"], doc["status"]["humidity"], doc["status"]["light"] };
     String plant = String(doc["plant"]);
+    String plant_img = String(doc["plant_img"]);
     int watering_for = doc["watering_time"];
 
     /* Handle Plant */
@@ -243,7 +244,7 @@ void callback(char *topic, byte *payload, unsigned int length) {
       mess += " My moisture is too wet!";
     }
     
-    tmp = "{plant: '"+plant+"', watering_time: "+watering_for+", message: '"+mess+"'}";
+    tmp = "{plant: '"+plant+"',plant_img: '"+plant_img+"', watering_time: "+watering_for+", message: '"+mess+"'}";
 
     /* END Handle Plant */
 
