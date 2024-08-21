@@ -244,7 +244,7 @@ void callback(char *topic, byte *payload, unsigned int length) {
       mess += " My moisture is too wet!";
     }
     
-    tmp = "{plant: '"+plant+"',plant_img: '"+plant_img+"', watering_time: "+watering_for+", message: '"+mess+"'}";
+    tmp = "{'plant': '"+plant+"','plant_img': '"+plant_img+"', 'watering_time': "+watering_for+", 'message': '"+mess+"'}";
 
     /* END Handle Plant */
 
