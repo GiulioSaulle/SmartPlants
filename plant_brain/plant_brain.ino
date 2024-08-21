@@ -331,7 +331,7 @@ void loop() {
       }
 
 
-      snprintf(msg, MSG_BUFFER_SIZE, "{room: 1,sensors: {temperature: %ld, humidity: %ld}}", temperature, humidity);
+      snprintf(msg, MSG_BUFFER_SIZE, "{'room': 1,'sensors': ['temperature': %ld, 'humidity': %ld]}", temperature, humidity);
       Serial.print("Publish message: ");
       Serial.println(msg);
       client.publish(smart_mirror_topic.c_str(), msg);
