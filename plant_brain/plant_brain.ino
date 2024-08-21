@@ -45,7 +45,7 @@ String debug_topic = "smart_plants_debug";
 String smart_mirror_topic = "smart_mirror";
 
 String tmp;
-int wifi_cell = 3;
+int wifi_cell = 1;
 const int maxTries = 50;
 
 WiFiClient espClient;
@@ -234,7 +234,7 @@ void callback(char *topic, byte *payload, unsigned int length) {
     } 
     tmp += "}}";*/
 
-    String mess = "From " + plant + ": ";
+    String mess = "";//"From " + plant + ": ";
     
     const char* message_m = messages_friendly[status[0]][status[1]][status[2]];
     mess += message_m;
