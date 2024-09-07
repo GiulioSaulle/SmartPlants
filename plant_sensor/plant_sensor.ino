@@ -11,6 +11,7 @@
 #include <ArduinoJson.h>
 
 #define soil_moisture_pin 0
+#define solenoid_pin 1 //This is the output pin on the Arduino we are using
 #define LED LED_BUILTIN
 #define delay_readings 20000 //reading window sensor
 
@@ -241,11 +242,12 @@ void ledOFF() {
 
 void openPump(){
   Serial.println("Opened Pump");
+  digitalWrite(solenoid_pin, HIGH); //Switch Solenoid ON
 }
 
 void closePump(){
   Serial.println("Closed Pump");
-
+  digitalWrite(solenoid_pin, LOW); //Switch Solenoid OFF
 }
 
 void followRedirect(HTTPClient &http) {
@@ -397,6 +399,7 @@ void setup() {
   Serial.begin(115200);
   pinMode(LED, OUTPUT);         // Initialize the BUILTIN_LED pin as an output
   digitalWrite(LED, HIGH);      // turn off led
+  pinMode(solenoid_pin, OUTPUT); //Sets the solenoid pin as an output
   randNumber = random(0xffff);  // random(256); //0 to 255
   topic = "smart_plants/" + String(randNumber);
   setup_wifi();
