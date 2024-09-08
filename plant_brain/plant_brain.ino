@@ -11,7 +11,7 @@
 #include <ArduinoJson.h>
 
 #define LED 2
-#define delay_readings 60000
+#define delay_readings 30000//60000
 
 #define DHT_delay 500
 #define uS_TO_S_FACTOR 1000000 /* Conversion factor for micro seconds to seconds */
@@ -51,12 +51,12 @@ const int maxTries = 50;
 WiFiClient espClient;
 PubSubClient client(espClient);
 unsigned long lastMsg = 0;
-#define MSG_BUFFER_SIZE (128)
+#define MSG_BUFFER_SIZE (512)
 char msg[MSG_BUFFER_SIZE];
 /* END Wifi */
 
 /* Useful Vars*/
-DynamicJsonDocument doc(1024);
+DynamicJsonDocument doc(3000);
 const char* messages_formal[sensor_number][sensor_number][sensor_number] = {
     { // status[0] == 0 (temperature too low)
         { "The temperature is too low and the environment is dry. Please consider relocating me to a warmer location with increased sunlight.",
@@ -218,10 +218,21 @@ void callback(char *topic, byte *payload, unsigned int length) {
       return;
     }
 
+    float light =  doc["sensors"]["light"];
+    int temperature = doc["sensors"]["temperature"];
+    int humidity = doc["sensors"]["humidity"];
+    int soil_moisture = doc["sensors"]["soil_moisture"];
     unsigned int status[sensor_number] = { doc["status"]["temperature"], doc["status"]["humidity"], doc["status"]["light"] };
     String plant = String(doc["plant"]);
     String plant_img = String(doc["plant_img"]);
     int watering_for = doc["watering_time"];
+
+    /* Serial.println("Soil Moisture:"+String(soil_moisture));
+    Serial.println("humidity:"+String(humidity));
+    Serial.println("temperature:"+String(temperature));
+    Serial.println("light:"+String(light));
+    Serial.println("Watering for:"+String(watering_for)); */
+
 
     /* Handle Plant */
 
@@ -244,13 +255,25 @@ void callback(char *topic, byte *payload, unsigned int length) {
       mess += " My moisture is too wet!";
     }
     
-    tmp = "{'plant': '"+plant+"','plant_img': '"+plant_img+"', 'watering_time': "+watering_for+", 'message': '"+mess+"'}";
-
+    //tmp = "{\"plant\": \""+plant+"\", \"plant_img\": \""+plant_img+"\", \"watering_time\": \""+watering_for+"\", \"sensors\": {\"soil_moisture\": \""+soil_moisture+"\", \"temperature\": \""+temperature+"\", \"humidity\": \""+humidity+"\", \"light\": \""+light+"\"}, \"message\": \""+mess+"\"}";
+    tmp =  "{\"plant\": \""+plant+"\",\"plant_img\": \""+plant_img+"\", \"watering_time\": \""+String(watering_for)+"\",\"sensors\": {\"soil_moisture\":\""+String(soil_moisture)+"\", \"temperature\": \""+String(temperature)+"\", \"humidity\": \""+String(humidity)+"\", \"light\": \""+String(light)+"\"},\"message\": \""+mess+"\"}";
+// \"sensors\": {\"soil_moisture\":\""+String(soil_moisture)+"\", \"temperature\": \""+String(temperature)+"\", \"humidity\": \""+String(humidity)+"\", \"light\": \""+String(light)+"\"} ,
+    
+    //snprintf(msg, MSG_BUFFER_SIZE, "{\"plant\": \"%s\", \"plant_img\": \"%s\", \"watering_time\": \"%ld\", \"sensors\": {\"soil_moisture\": \"%ld\", \"temperature\": \"%ld\", \"humidity\": \"%ld\", \"light\": \"%.2f\"}, \"message\": \"%s\"}", plant, plant_img.c_str(),watering_for,soil_moisture,temperature,humidity,light);
     /* END Handle Plant */
-
     client.publish(smart_mirror_topic.c_str(), tmp.c_str());
+    //client.publish(smart_mirror_topic.c_str(), msg);
     Serial.print("Publish message: ");
     Serial.println(tmp);
+    
+    // Check the publish result
+int publishStatus = client.state();
+if (publishStatus != MQTT_CONNECTED) {
+    Serial.print("Publish failed, error code: ");
+    Serial.println(publishStatus);
+} /* else {
+    Serial.println("Publish succeeded.");
+} */
   }
 }
 
@@ -264,6 +287,7 @@ void reconnect() {
     clientId += String(randNumber, HEX);
     // Attempt to connect
     client.setKeepAlive(90);  // setting keep alive to 90 seconds
+    client.setBufferSize(512);
     if (client.connect(clientId.c_str())) {
       Serial.println("connected");
       client.subscribe(debug_topic.c_str());
@@ -331,7 +355,7 @@ void loop() {
       }
 
 
-      snprintf(msg, MSG_BUFFER_SIZE, "{'room': 1,'sensors': ['temperature': %ld, 'humidity': %ld]}", temperature, humidity);
+      snprintf(msg, MSG_BUFFER_SIZE, "{\"room\": 1,\"sensors\": {\"temperature\": \"%ld\", \"humidity\": \"%ld\"}}", temperature, humidity);
       Serial.print("Publish message: ");
       Serial.println(msg);
       client.publish(smart_mirror_topic.c_str(), msg);

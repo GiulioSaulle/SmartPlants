@@ -123,7 +123,7 @@ const int maxTries = 50;
 WiFiClient espClient;
 PubSubClient client(espClient);
 unsigned long lastMsg = 0;
-#define MSG_BUFFER_SIZE (256)
+#define MSG_BUFFER_SIZE (512)
 char msg[MSG_BUFFER_SIZE];
 /* END Wifi */
 
@@ -216,6 +216,7 @@ void reconnect() {
     clientId += String(randNumber, HEX);
     // Attempt to connect
     client.setKeepAlive(90);  // setting keep alive to 90 seconds
+    client.setBufferSize(512);
     if (client.connect(clientId.c_str())) {
       Serial.println("connected");
       client.subscribe(debug_topic.c_str());
@@ -525,10 +526,10 @@ void loop() {
       else if(min_env_humid - humidity > 0 ) status_hum = 0;
 
       if (watering_for != 0) {
-        snprintf(msg, MSG_BUFFER_SIZE, "{room: 0, plant: '%s', plant_img: '%s',  sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f}, watering_time: %ld, status: {temperature: %ld, humidity: %ld, light: %ld}}",display_pid, image_url.c_str() ,soil_moisture, temperature, humidity, event.light, watering_for, status_temp, status_hum, status_light);
+        snprintf(msg, MSG_BUFFER_SIZE, "{room: 0, plant: '%s', plant_img: '%s',  sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f}, watering_time: %ld, status: {temperature: %ld, humidity: %ld, light: %ld}}",display_pid, image_url.c_str() ,soil_moisture, temperature, humidity, event.light, int(watering_for / 1000), status_temp, status_hum, status_light);
         watering_for = 0;
       } else {
-        snprintf(msg, MSG_BUFFER_SIZE, "{room: 0, plant: '%s', plant_img: '%s', sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f}, status: {temperature: %ld, humidity: %ld, light: %ld}}",display_pid, image_url.c_str(), soil_moisture, temperature, humidity, event.light, status_temp, status_hum, status_light);
+        snprintf(msg, MSG_BUFFER_SIZE, "{room: 0, plant: '%s', plant_img: '%s', sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f}, watering_time: 0, status: {temperature: %ld, humidity: %ld, light: %ld}}",display_pid, image_url.c_str(), soil_moisture, temperature, humidity, event.light, status_temp, status_hum, status_light);
       }
       Serial.print("Publish message: ");
       Serial.println(msg);
