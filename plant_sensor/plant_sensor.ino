@@ -204,6 +204,18 @@ void callback(char *topic, byte *payload, unsigned int length) {
     client.publish(debug_topic.c_str(), tmp.c_str());
     esp_restart();
   }
+  if (message == String(randNumber) + "-open") {
+    // Reset the ESP32-C3
+    tmp = "Opening Valve";
+    openPump();
+    client.publish(debug_topic.c_str(), tmp.c_str());
+  }
+  if (message == String(randNumber) + "-close") {
+    // Reset the ESP32-C3
+    tmp = "Closing Valve";
+    closePump();
+    client.publish(debug_topic.c_str(), tmp.c_str());
+  }
 }
 
 void reconnect() {
