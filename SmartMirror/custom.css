@@ -28,36 +28,5 @@
   --gap-modules: 30px;
 }
 
-/*
 
-.MMM-EyeCandy, .MMM-MQTT {
-	display: inline-flex;
-	margin-right: 5px;
-	margin-left: 5px;
-}
-
-.region.top.right{
-    background: #fff;
-    
-}
-
-.region.top.right{
-    background: rgba(255,255,255,0.5);
-    border-radius:30px;
-    padding: 8px;
-    //height: calc(100% - var(--gap-body-top) - var(--gap-body-bottom));
-    //width: calc(100% - var(--gap-body-right) - var(--gap-body-left));
-  
-}
-
-
-.MMM-EyeCandy, .MMM-MQTT{
-	display: inline-block;
-	width: 33.33vw; /
-  height: 20vh; 
-	max-height: 10%;
-	margin-right: 0px;
-	margin-left: 0px;
-}
-*/
 
