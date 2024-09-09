@@ -3,6 +3,7 @@
    plants. It tracks temperature, humidity, and soil moisture and sends this data via MQTT to an IoT platform,
    allowing for remote plant care monitoring and automation.
 </p>
+<p>This project exploit the already existing MagicMirror Project<a href="https://github.com/MagicMirrorOrg/MagicMirror" target="_blank"/></p>
 <h2>Idea</h2>
 <p>This project was created to help people in managing their balcony/vegetable
    garden, being able to have a smart dashboard in which plant parameters such
