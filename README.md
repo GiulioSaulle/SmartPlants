@@ -108,12 +108,11 @@ const char* mqtt_topic = "your_mqtt_topic";</code></pre>
          </li>
          <li>
             <strong>Replace MagicMirror settings with SmartPlants</strong>
-            <p>Once Magic Mirror is installed, insert the <code>MMM-PlantInfo</code> and <code>MMM-PlantRoom</code> present in <strong>SmartMirror</strong> directory into the <code>modules</code> folder of your Magic Mirror installation:</p>
-            <code>/MagicMirror/modules</code>.
+            <p>Once Magic Mirror is installed, insert the <code>MMM-PlantInfo</code> and <code>MMM-PlantRoom</code> present in <strong>SmartMirror</strong> directory into the <code>modules</code> folder of your Magic Mirror installation: <code>/MagicMirror/modules</code>.
          </li>
          <li>
             <strong>Configure the module</strong>
-            <p>Follow the specific instructions to configure SmartPlants within the <code>config.js</code> file of Magic Mirror, or replace the file with the <code>config.js</code> present in <strong>SmartMirror</strong> directory</p>
+            <p>Follow the specific instructions to configure SmartPlants within the <code>config.js</code> file of Magic Mirror, or replace the file with the <code>config.js</code> present in <strong>SmartMirror</strong> directory.
             <p>Replace also <code>main.css</code> and <code>custom.css</code> with the ones in <code>MagicMirror/css</code>.</p>
          </li>
          <li>
@@ -123,7 +122,6 @@ const char* mqtt_topic = "your_mqtt_topic";</code></pre>
          </li>
       </ol>
    </li>
-   <li>
    <li>
       <strong>Test the Project:</strong>
       <p>Once the hardware is assembled and the code is uploaded, open the Serial Monitor in the Arduino IDE to
