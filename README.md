@@ -114,6 +114,7 @@ const char* mqtt_topic = "your_mqtt_topic";</code></pre>
 <p>This project is licensed under the MIT License. See the <a href="LICENSE">LICENSE</a> file for more details.</p> -->
 <h2>Contributions</h2>
 <p>
-  Gabriele Romano, Giulio Saulle
-  From Politecnico of Milan
+  Gabriele Romano,Giulio Saulle
+  
 </p>
+<p>From Politecnico of Milan</p>
