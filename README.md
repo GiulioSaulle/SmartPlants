@@ -92,6 +92,33 @@ const char* mqtt_password = "your_mqtt_password";
 const char* mqtt_topic = "your_mqtt_topic";</code></pre>
    </li>
    <li>
+      <strong>Install and Configure Magic Mirror:</strong>
+      <p>To use the SmartPlants module with <a href="https://github.com/MichMich/MagicMirror" target="_blank">Magic Mirror</a>, follow these steps:</p>
+      <ol>
+         <li>
+            <strong>Install Magic Mirror</strong>
+            <p>Follow the official Magic Mirror installation instructions available 
+            <a href="https://github.com/MichMich/MagicMirror#installation" target="_blank">here</a>.</p>
+         </li>
+         <li>
+            <strong>Clone the SmartPlants repository</strong>
+            <p>Once Magic Mirror is installed, clone this repository into the <code>modules</code> folder of your Magic Mirror installation:</p>
+            <pre><code>cd ~/MagicMirror/modules
+git clone https://github.com/gabriele2romano/SmartPlants.git</code></pre>
+         </li>
+         <li>
+            <strong>Configure the module</strong>
+            <p>Follow the specific instructions to configure SmartPlants within the <code>config.js</code> file of Magic Mirror.</p>
+         </li>
+         <li>
+            <strong>Start Magic Mirror</strong>
+            <p>After everything is configured correctly, start Magic Mirror and verify that the SmartPlants module is working as expected:</p>
+            <pre><code>npm start</code></pre>
+         </li>
+      </ol>
+   </li>
+   <li>
+   <li>
       <strong>Test the Project:</strong>
       <p>Once the hardware is assembled and the code is uploaded, open the Serial Monitor in the Arduino IDE to
          view sensor readings and MQTT connection status. You can monitor the data being sent to your MQTT broker
