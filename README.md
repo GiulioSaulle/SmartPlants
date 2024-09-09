@@ -101,14 +101,20 @@ const char* mqtt_topic = "your_mqtt_topic";</code></pre>
             <a href="https://github.com/MichMich/MagicMirror#installation" target="_blank">here</a>.</p>
          </li>
          <li>
-            <strong>Clone the SmartPlants repository</strong>
-            <p>Once Magic Mirror is installed, clone this repository into the <code>modules</code> folder of your Magic Mirror installation:</p>
-            <pre><code>cd ~/MagicMirror/modules
-git clone https://github.com/gabriele2romano/SmartPlants.git</code></pre>
+            <strong>Install MMM-MQTTBridge</strong>
+            <p>Follow the official MMM-MQTTBridge installation instructions available
+            <a href="https://github.com/Tom-Hirschberger/MMM-MQTTbridge#installation" target="_blank">here</a>.</p>
+            <p>Replace <code>mqttDictionary.js</code> file in <code>/MMM-MQTTbridge/dict</code> with the <code>mqttDictionary.js</code> present in <strong>SmartMirror</strong> directory.
+         </li>
+         <li>
+            <strong>Replace MagicMirror settings with SmartPlants</strong>
+            <p>Once Magic Mirror is installed, insert the <code>MMM-PlantInfo</code> and <code>MMM-PlantRoom</code> present in <strong>SmartMirror</strong> directory into the <code>modules</code> folder of your Magic Mirror installation:</p>
+            <code>/MagicMirror/modules</code>.
          </li>
          <li>
             <strong>Configure the module</strong>
-            <p>Follow the specific instructions to configure SmartPlants within the <code>config.js</code> file of Magic Mirror.</p>
+            <p>Follow the specific instructions to configure SmartPlants within the <code>config.js</code> file of Magic Mirror, or replace the file with the <code>config.js</code> present in <strong>SmartMirror</strong> directory</p>
+            <p>Replace also <code>main.css</code> and <code>custom.css</code> with the ones in <code>MagicMirror/css</code>.</p>
          </li>
          <li>
             <strong>Start Magic Mirror</strong>
