@@ -1,0 +1,55 @@
+.plant-list-container {
+  width: 70vw; 
+  max-height: 80vh; 
+  overflow-y: auto; 
+  //background-color: transparent;
+  border-radius:30px;
+  padding: 10px;
+  //border: 1px solid #ccc;
+}
+
+.plant-list-container.has-data {
+  display: block; 
+}
+
+
+.plant-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 20px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: white; 
+  color: black; 
+  transition: opacity 0.5s ease; 
+  opacity: 1; 
+}
+
+.image {
+  max-width: 20%;
+  max-height: 100%;
+  margin-right: 20px;
+  border-radius:50%;
+}
+
+.text {
+  flex: 1;
+  font-size: 1.2em;
+  color: black;
+  text-align: left; 
+}
+
+.plant-name {
+  align-items: center;
+  font-size: 2em;
+  font-weight: bold;
+  margin-bottom: 40px;
+  text-align: left; 
+}
+
+.sensor-data {
+  font-size: 1em;
+  color: #333;
+}
