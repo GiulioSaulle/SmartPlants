@@ -9,6 +9,7 @@
 #include <HTTPClient.h>
 #include <Preferences.h>  //for saving data built in
 #include <ArduinoJson.h>
+#include "../WifiCredentials.h"
 
 #define soil_moisture_pin 0
 #define solenoid_pin 1 //This is the output pin on the Arduino we are using
@@ -107,9 +108,6 @@ void configureSensor(void) {
 
 /* Wifi */
 const char *mqtt_server = "mqtt-dashboard.com";
-
-const char *ssids[] = { "Vodafone-50632873", "Vodafone-A83245675", "Vodafone-A83245675-EXT", "Vodafone-CGiulia" };
-const char *passwords[] = { "zemaFKUdaX1.", "3qxhfYKxpEYgdtad", "3qxhfYKxpEYgdtad", "Aeria999" };
 
 int randNumber;
 String topic; //topic used to send sensors data

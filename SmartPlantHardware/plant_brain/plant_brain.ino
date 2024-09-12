@@ -9,6 +9,7 @@
 #include <HTTPClient.h>
 #include <Preferences.h>  //for saving data built in
 #include <ArduinoJson.h>
+#include "../WifiCredentials.h"
 
 #define LED 2
 #define delay_readings 30000//60000
@@ -32,12 +33,7 @@ String status_description[sensor_number] = { " is too low.", " is normal.", " is
 /* END Sensors */
 
 /* Wifi */
-/* const char* ssid = "Vodafone-50632873";
-const char* password = "zemaFKUdaX1."; */
 const char *mqtt_server = "mqtt-dashboard.com";
-
-const char *ssids[] = { "Vodafone-50632873", "Vodafone-A83245675", "Vodafone-A83245675-EXT", "Vodafone-CGiulia" };
-const char *passwords[] = { "zemaFKUdaX1.", "3qxhfYKxpEYgdtad", "3qxhfYKxpEYgdtad", "Aeria999" };
 
 int randNumber;
 String topic;
