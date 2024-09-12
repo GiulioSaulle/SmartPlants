@@ -23,7 +23,6 @@ const int sensor_number = 3;
 
 
 String server_c = "https://open.plantbook.io/api/v1/plant/detail/";
-String apiKey = "12fb8eb45d63fd1bba9518ffaac0017a0a15484e";
 
 /* Sensors */
 DHT11 dht11(26);
