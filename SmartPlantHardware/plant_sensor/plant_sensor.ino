@@ -10,6 +10,7 @@
 #include <Preferences.h>  //for saving data built in
 #include <ArduinoJson.h>
 #include "../WifiCredentials.h"
+#include "Keys.h"
 
 #define soil_moisture_pin 0
 #define solenoid_pin 1 //This is the output pin on the Arduino we are using
@@ -27,9 +28,6 @@
 
 String plant = "mimosa pudica";
 String server_c = "https://open.plantbook.io/api/v1/plant/detail/";
-/* String apiEndpoint = "/api/v1/plant/detail/mimosa%20pudica/";
-String server = "open.plantbook.io";*/
-String apiKey = "12fb8eb45d63fd1bba9518ffaac0017a0a15484e";
 
 /* Plant API data */
 String pid;
