@@ -371,39 +371,6 @@ void makeGetRequest() {
   }
 }
 
-
-/* void makeGetRequest() {
-  WiFiClientSecure client_s;
-  client_s.setInsecure(); // Use this only if you don't need SSL verification
-  // Alternatively, use client.setCACert() to set a specific root CA certificate.
-
-  if (client_s.connect(server.c_str(), 443)) { // 443 is the default port for HTTPS
-    // Construct the GET request
-    String getRequest = String("GET ") + apiEndpoint + " HTTP/1.1\r\n" +
-                        "Authorization: Token " + apiKey + "\r\n"+
-                        "Host:  "+server+"\r\n\r\n";
-
-    // Print the raw GET request to Serial
-    Serial.println("Raw GET request:");
-    Serial.println(getRequest);
-
-    // Send the GET request
-    client_s.print(getRequest);
-
-    // Wait for response and print it
-    while (client_s.connected() || client_s.available()) {
-      if (client_s.available()) {
-        String line = client_s.readStringUntil('\n');
-        Serial.println(line);
-      }
-    }
-    
-    client_s.stop();
-  } else {
-    Serial.println("Unable to connect");
-  }
-}
- */
 void setup() {
   Serial.begin(115200);
   pinMode(LED, OUTPUT);         // Initialize the BUILTIN_LED pin as an output
@@ -445,6 +412,8 @@ void setup() {
   /* END Sensor setup */
 }
 
+int temperature = 0;
+int humidity = 0;
 void loop() {
   //printWiFiStatus();
   //Serial.println("MQTT Client is: " + String(client.connected()));
@@ -478,43 +447,23 @@ void loop() {
     }
 
     if (now - lastMsg > (delay_readings - DHT_delay)) {
-      lastMsg = now;
-      int temperature = 0;
-      int humidity = 0;
+      lastMsg = now;/* 
+      int temperature = -1;
+      int humidity = -1; */
       int soil_moisture = analogRead(soil_moisture_pin);
       // Attempt to read the temperature and humidity values from the DHT11 sensor.
-      int result = dht11.readTemperatureHumidity(temperature, humidity);
-      if (result != 0) {
+      int result_dht11 = dht11.readTemperatureHumidity(temperature, humidity);
+      if (result_dht11 != 0) {
         // Print error message based on the error code.
-        Serial.println(DHT11::getErrorString(result));
+        
+      tmp = DHT11::getErrorString(result_dht11);
+      Serial.println(tmp);
+      client.publish(debug_topic.c_str(), tmp.c_str());
       }
 
       // Get a new sensor event
       sensors_event_t event;
       tsl.getEvent(&event);
-
-      // Display the results (light is measured in lux)
-      /* if (!event.light) {
-        // If event.light = 0 lux the sensor is probably saturated and no reliable data could be generated!
-        Serial.println("TS2561 overload");
-      } */
-      
-      /*if (watering_time == 0 && soil_moisture > max_soil_ec) {
-        lastWatering = now;
-        watering_time = 120000;  //120sec
-        Serial.print(String(soil_moisture) + " ");
-        ledON();
-      } else if (watering_time != 0 && (soil_moisture < (max_soil_ec - 100) || now - lastWatering > watering_time)) {
-        Serial.print(String(soil_moisture) + " ");
-        ledOFF();
-        watering_time = 0;
-        watering_for = now - lastWatering;
-        Serial.println("Watered for: " + String(watering_for / 1000) + "seconds");
-      }
-      if (soil_moisture < min_soil_ec) {
-        Serial.println("Expose to Sun");
-      } */
-
       
       /*
         0: Too Low
