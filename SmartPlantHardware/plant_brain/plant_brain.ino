@@ -230,16 +230,6 @@ void callback(char *topic, byte *payload, unsigned int length) {
 
 
     /* Handle Plant */
-
-    /*String tmp = "{plant: '" + plant + "', status: { ";
-    for (int k = 0; k < sensor_number; k++) {
-      if( k!=0) tmp+= ", ";
-      status_plant[k] = String(param[k] + status_description[status[k]]);
-      //Serial.println(status_plant[k]);
-      tmp += "'"+status_plant[k] + "'";
-    } 
-    tmp += "}}";*/
-
     String mess = "";//"From " + plant + ": ";
     
     const char* message_m = messages_friendly[status[0]][status[1]][status[2]];
@@ -250,12 +240,10 @@ void callback(char *topic, byte *payload, unsigned int length) {
       mess += " My moisture is too wet!";
     }
     
-    //tmp = "{\"plant\": \""+plant+"\", \"plant_img\": \""+plant_img+"\", \"watering_time\": \""+watering_for+"\", \"sensors\": {\"soil_moisture\": \""+soil_moisture+"\", \"temperature\": \""+temperature+"\", \"humidity\": \""+humidity+"\", \"light\": \""+light+"\"}, \"message\": \""+mess+"\"}";
     tmp =  "{\"plant\": \""+plant+"\",\"plant_img\": \""+plant_img+"\", \"watering_time\": \""+String(watering_for)+"\",\"sensors\": {\"soil_moisture\":\""+String(soil_moisture)+"\", \"temperature\": \""+String(temperature)+"\", \"humidity\": \""+String(humidity)+"\", \"light\": \""+String(light)+"\"},\"message\": \""+mess+"\"}";
-// \"sensors\": {\"soil_moisture\":\""+String(soil_moisture)+"\", \"temperature\": \""+String(temperature)+"\", \"humidity\": \""+String(humidity)+"\", \"light\": \""+String(light)+"\"} ,
-    
-    //snprintf(msg, MSG_BUFFER_SIZE, "{\"plant\": \"%s\", \"plant_img\": \"%s\", \"watering_time\": \"%ld\", \"sensors\": {\"soil_moisture\": \"%ld\", \"temperature\": \"%ld\", \"humidity\": \"%ld\", \"light\": \"%.2f\"}, \"message\": \"%s\"}", plant, plant_img.c_str(),watering_for,soil_moisture,temperature,humidity,light);
+
     /* END Handle Plant */
+    
     client.publish(smart_mirror_topic.c_str(), tmp.c_str());
     //client.publish(smart_mirror_topic.c_str(), msg);
     Serial.print("Publish message: ");
