@@ -43,7 +43,10 @@ let config = {
 		},
 		{
 			module: "clock",
-			position: "top_left"
+			position: "top_left",
+			config:{
+				timezone:"Europe/Paris"
+			}
 		},
 		{
 			module: "weather",
@@ -110,6 +113,36 @@ let config = {
 			    //mqttTopic: "plantInfo",    
 		  }
 		},
+
+		{
+		        module: 'MMM-Rest',
+		        position: 'bottom_right',    // This can be any of the regions.
+		                                     // Best results in one of the side regions like: top_left
+		        config: {
+		                debug: false,
+				forceAlign: false,
+				mappings: {
+		                    /*on_off: {
+		                        true: 'on',
+		                        false: 'off',
+		                    },
+		                    temperature: {
+		                        1: 'cold',
+		                        2: 'warm',
+		                        3: 'HOT',
+		                    },*/
+		                },
+		                sections: [
+		                {
+		                    format: '%d<span class="wi wi-celsius"></span>',
+		                    url: 'https://api.thingspeak.com/channels/2656627/fields/1/last.txt?api_key=T59S3YZZOTQHJMZX',
+		                },
+		            ],
+		            output: [
+		                ['Water Used','@1'],
+		            ],
+		        },
+		    }
 	]
 };
 
