@@ -26,7 +26,7 @@
 #define TIME_TO_SLEEP 20       /* Time ESP32 will go to sleep (in seconds) */
 
 
-String plant = "mimosa pudica";
+String plant = "ocimum basilicum";
 String server_c = "https://open.plantbook.io/api/v1/plant/detail/";
 
 /* Plant API data */
@@ -483,10 +483,10 @@ void loop() {
       else if(min_env_humid - humidity > 0 ) status_hum = 0;
 
       if (watering_for != 0) {
-        snprintf(msg, MSG_BUFFER_SIZE, "{room: 0, plant: '%s', plant_img: '%s',  sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f}, watering_time: %ld, status: {temperature: %ld, humidity: %ld, light: %ld}}",display_pid, image_url.c_str() ,soil_moisture, temperature, humidity, event.light, int(watering_for / 1000), status_temp, status_hum, status_light);
+        snprintf(msg, MSG_BUFFER_SIZE, "{room: 0, plant: '%s', plant_img: '%s',  sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f}, watering_time: %ld, status: {temperature: %ld, humidity: %ld, light: %ld}}",display_pid.c_str(), image_url.c_str() ,soil_moisture, temperature, humidity, event.light, int(watering_for / 1000), status_temp, status_hum, status_light);
         watering_for = 0;
       } else {
-        snprintf(msg, MSG_BUFFER_SIZE, "{room: 0, plant: '%s', plant_img: '%s', sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f}, watering_time: 0, status: {temperature: %ld, humidity: %ld, light: %ld}}",display_pid, image_url.c_str(), soil_moisture, temperature, humidity, event.light, status_temp, status_hum, status_light);
+        snprintf(msg, MSG_BUFFER_SIZE, "{room: 0, plant: '%s', plant_img: '%s', sensors: {soil_moisture: %ld, temperature: %ld, humidity: %ld, light: %.2f}, watering_time: 0, status: {temperature: %ld, humidity: %ld, light: %ld}}",display_pid.c_str(), image_url.c_str(), soil_moisture, temperature, humidity, event.light, status_temp, status_hum, status_light);
       }
       Serial.print("Publish message: ");
       Serial.println(msg);
