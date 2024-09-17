@@ -316,6 +316,9 @@ void setup() {
   /* END Sensor setup */
 }
 
+
+int temperature = 0;
+int humidity = 0;
 void loop() {
   //Serial.println("WORKING");
   if (WiFi.status() == WL_CONNECTED) {  //Connected to WiFi
@@ -327,9 +330,6 @@ void loop() {
     unsigned long now = millis();
     if (now - lastMsg > (delay_readings - DHT_delay)) {
       lastMsg = now;
-
-      int temperature = 0;
-      int humidity = 0;
       // Attempt to read the temperature and humidity values from the DHT11 sensor.
       int result = dht11.readTemperatureHumidity(temperature, humidity);
       if (result != 0) {
